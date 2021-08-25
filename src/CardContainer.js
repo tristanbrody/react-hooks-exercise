@@ -1,4 +1,4 @@
-import react, { useState, useEffect } from "react";
+import react, { useState, useEffect, useRef } from "react";
 
 function CardContainer() {
   const [deck, setDeck] = useState(null);
@@ -13,25 +13,24 @@ function CardContainer() {
     );
   }, []);
 
-  const handleClick = e => {
-    setInterval(getCard, 1000);
+  const intervalRef = useRef();
+
+  const handleClick = () => {
+    intervalRef.current = setInterval(getCard, 1000);
   };
 
-  async function getCard() {
+  const getCard = async e => {
     fetch(`http://deckofcardsapi.com/api/deck/${deck}/draw/?count=1`)
       .then(response => response.json())
       .then(data => {
-        const card = data;
         if (data.remaining === 0) {
-          if (deckEmpty) {
-            return alert("No more cards in the deck!");
-          } else {
-            setDeckEmpty(true);
-          }
+          setCards(cards => [...cards, data.cards[0].image]);
+          clearInterval(intervalRef.current);
+          return alert("No more cards in the deck!");
         }
-        setCards([...cards, data.cards[0].image]);
+        setCards(cards => [...cards, data.cards[0].image]);
       });
-  }
+  };
 
   return (
     <div>
